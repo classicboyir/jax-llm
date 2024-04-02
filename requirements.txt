@@ -1,0 +1,8 @@
+jax[tpu]
+flax
+jupyter
+matplotlib
+numpy
+tensorflow
+tensorboard-plugin-profile
+tensorflow-datasets
