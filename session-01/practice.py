@@ -8,9 +8,17 @@ import flax.linen as nn
 
 BATCH_IN_SEQUENCE = 384
 SEQUENCE_LENGTH = 128
+
 VOCAB_DIM = 256
 EMBED_DIM = 512
+FF_DIM = 2048
 
+LAYERS = 4
+
+HEAD_DEPTH = 128
+NUM_HEADS = 4
+
+LEARNING_RATE = 1e-3
 
 class TinyLLM(nn.Module):
     @nn.compact
@@ -29,7 +37,29 @@ class TinyLLM(nn.Module):
         print(f'embedding.shape -> {embedding.shape}')
         x = jnp.asarray(embedding)[x] # BATCH, SEQUENCE, EMD
         print(f'x.shape - {x.shape}')
-        return x
+
+        for i in range(LAYERS):
+            feedforward = self.param(
+                'feedforward_' + str(i),
+                nn.initializers.lecun_normal(),
+                (EMBED_DIM, FF_DIM),
+                jnp.float32
+            )
+
+            x = x @ jnp.asarray(feedforward)
+            x = jax.nn.relu(x)
+
+            embed = self.param(
+                'embed_' + str(i),
+                nn.initializers.lecun_normal(),
+                (FF_DIM, EMBED_DIM),
+                jnp.float32
+            )
+
+            x = x @ jnp.asarray(embed)
+            x = jax.nn.relu(x)
+
+        return x @ jnp.asarray(embedding).T # to rotate this to EMBED_DIM, VOCAB_DIM
 
 
 
@@ -66,6 +96,7 @@ def main():
         model.apply(params, inputs)
 
         proposed_outputs = model.apply(params, inputs)
+        print(f'proposed_outputs.shape - {proposed_outputs.shape}')
 
         breakpoint()
         break
@@ -73,3 +104,6 @@ def main():
 if __name__ == "__main__":
     main()
     print("hello")
+
+params['params'].keys()
+['embedding', 'feedforward_0', 'embed_0', 'feedforward_1', 'embed_1', 'feedforward_2', 'embed_2', 'feedforward_3', 'embed_3']
