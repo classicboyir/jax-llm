@@ -5,6 +5,10 @@ import numpy as np
 import jax
 import jax.numpy as jnp
 import flax.linen as nn
+from flax.training import train_state
+
+import optax
+
 
 BATCH_IN_SEQUENCE = 384
 SEQUENCE_LENGTH = 128
@@ -33,10 +37,10 @@ class TinyLLM(nn.Module):
             (VOCAB_DIM, EMBED_DIM),
             jnp.float32
             )
-        print(f'type of embedding {type(embedding)}')
-        print(f'embedding.shape -> {embedding.shape}')
-        x = jnp.asarray(embedding)[x] # BATCH, SEQUENCE, EMD
-        print(f'x.shape - {x.shape}')
+        # print(f'type of embedding {type(embedding)}')
+        # print(f'embedding.shape -> {embedding.shape}')
+        x = embedding[x] # BATCH, SEQUENCE, EMD
+        # print(f'x.shape - {x.shape}')
 
         for i in range(LAYERS):
             feedforward = self.param(
@@ -46,7 +50,7 @@ class TinyLLM(nn.Module):
                 jnp.float32
             )
 
-            x = x @ jnp.asarray(feedforward)
+            x = x @ feedforward
             x = jax.nn.relu(x)
 
             embed = self.param(
@@ -56,15 +60,23 @@ class TinyLLM(nn.Module):
                 jnp.float32
             )
 
-            x = x @ jnp.asarray(embed)
+            x = x @ embed
             x = jax.nn.relu(x)
 
-        return x @ jnp.asarray(embedding).T # to rotate this to EMBED_DIM, VOCAB_DIM
+        return x @ embedding.T # to rotate this to EMBED_DIM, VOCAB_DIM
 
+
+def calculate_loss(params, model, inputs, outputs):
+    one_hot = jax.nn.one_hot(outputs, VOCAB_DIM) # -> (384, 128, 256)
+    proposed_outputs = model.apply(params, inputs) # -> (384, 128, 256)
+
+    loss = optax.softmax_cross_entropy(proposed_outputs, one_hot)
+    # breakpoint()
+    return jnp.mean(loss)
 
 
 def convert_to_ascii(string_array, max_length):
-    print(f'string_array: ${string_array}')
+    # print(f'string_array: ${string_array}')
     result = np.zeros((len(string_array), max_length), dtype=np.uint8)
     for i, string in enumerate(string_array):
         for j, char in enumerate(string):
@@ -87,23 +99,31 @@ def main():
 
     rngkey = jax.random.key(0)
     model = TinyLLM()
-    params = model.init(rngkey, jnp.ones((BATCH_IN_SEQUENCE, SEQUENCE_LENGTH), dtype=jnp.uint8))
+    _params = model.init(rngkey, jnp.ones((BATCH_IN_SEQUENCE, SEQUENCE_LENGTH), dtype=jnp.uint8))
     
+    tx = optax.adam(learning_rate = LEARNING_RATE)
+    state = train_state.TrainState.create(
+        apply_fn=model.apply,
+        params = _params,
+        tx=tx
+    )
+
+    iter = 0
     for example in ds:
-        print(example['text'])
+        # print(example['text'])
         outputs = convert_to_ascii(example['text'].numpy(), SEQUENCE_LENGTH)
         inputs = input_to_output(outputs)
-        model.apply(params, inputs)
 
-        proposed_outputs = model.apply(params, inputs)
-        print(f'proposed_outputs.shape - {proposed_outputs.shape}')
+        loss, grad = jax.value_and_grad(calculate_loss)(state.params, model, inputs, outputs)
+        state = state.apply_gradients(grads = grad)
+        print(f"{iter} -> loss:[{loss}] - tx:[]")
+        iter += 1
 
         breakpoint()
-        break
+        ## break
+
+    breakpoint()
 
 if __name__ == "__main__":
     main()
     print("hello")
-
-params['params'].keys()
-['embedding', 'feedforward_0', 'embed_0', 'feedforward_1', 'embed_1', 'feedforward_2', 'embed_2', 'feedforward_3', 'embed_3']

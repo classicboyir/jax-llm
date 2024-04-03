@@ -1,4 +1,3 @@
-print('Hello world 3')
 import tensorflow as tf
 import tensorflow_datasets as tfds
 
@@ -83,7 +82,6 @@ def calculate_loss(params, model, inputs, outputs):
    return jnp.mean(loss)
 
 def main():
-    print('Hello world')
     ds = tfds.load('lm1b', split='train', shuffle_files=False)
     ds = ds.batch(BATCH_IN_SEQUENCES)
 
@@ -109,5 +107,4 @@ def main():
 
 
 if __name__ == "__main__":
-    print('Hello world 2')
     main()
