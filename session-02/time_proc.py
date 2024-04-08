@@ -15,7 +15,7 @@ total_num_bytes_crossing_to_hbm = num_bytes * 3 # A, B, and C
 
 total_num_flops = MATRIX_DIM * MATRIX_DIM
 
-jax.profiler.start_trace('gs://maxtext-logs-dogfood-proj/jax-llm/dev-env/raw') ## -> tensorboard --logdir=gs://maxtext-logs-dogfood-proj/jax-llm/dev-env/raw
+jax.profiler.start_trace('gs://maxtext-logs-dogfood-proj/jax-llm/dev-env/raw_1') ## -> tensorboard --logdir=gs://maxtext-logs-dogfood-proj/jax-llm/dev-env/raw
 starttime = datetime.datetime.now()
 
 for i in range(STEPS):
