@@ -9,9 +9,8 @@ def simple_timeit(f, *args, tries = 10, task = None):
     assert task is not None
 
     trace_name = f"t_{task}_" + ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(10))
-    trace_dir = f"gs://maxtext-logs-dogfood-proj/jax-llm/dev-env/{trace_name}"
-    print('trace_dir: ', trace_dir)
-    
+    trace_dir = f"/tmp/{trace_name}"
+
     outcomes_ms = []
     jax.block_until_ready(f(*args)) #warm it up!
     jax.profiler.start_trace(trace_dir)
@@ -24,5 +23,5 @@ def simple_timeit(f, *args, tries = 10, task = None):
     jax.profiler.stop_trace()
 
     average_time_ms = sum(outcomes_ms)/len(outcomes_ms)
-    #print(f"{task}: average time milliseconds: {average_time_ms:.2f}, trace {trace_dir}")
+    print(f"{task}: average time milliseconds: {average_time_ms:.2f}, trace {trace_dir}")
     return average_time_ms

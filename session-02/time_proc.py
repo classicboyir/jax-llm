@@ -23,6 +23,7 @@ for i in range(STEPS):
 
 endtime = datetime.datetime.now()
 jax.profiler.stop_trace()
+
 average_time = (endtime - starttime).total_seconds() / STEPS
 
 print(f"{average_time}, tera flops per sec {total_num_flops/average_time / 10**12}, giga bytes per second {total_num_bytes_crossing_to_hbm/average_time / 10**9}")
