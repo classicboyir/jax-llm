@@ -2,15 +2,20 @@
 
 import datetime
 import jax
+import numpy as np
 
-MATRIX_DIM = 32768
+MATRIX_DIM = 65536 # 32768
 STEPS = 10
 
 A = jax.numpy.ones((MATRIX_DIM, MATRIX_DIM))
-B = jax.numpy.ones((MATRIX_DIM, MATRIX_DIM))
 
 num_bytes = A.size * 4 # 4 as it's fp32
 print('A.size -> ', A.size) # 1073741824
+
+B = jax.numpy.ones((MATRIX_DIM, MATRIX_DIM))
+
+# num_bytes = A.size * 4 # 4 as it's fp32
+# print('A.size -> ', A.size) # 1073741824
 total_num_bytes_crossing_to_hbm = num_bytes * 3 # A, B, and C
 
 total_num_flops = MATRIX_DIM * MATRIX_DIM
