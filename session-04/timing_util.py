@@ -4,12 +4,15 @@ import random
 import string
 
 
-def simple_timeit(f, *args, tries = 10, task = None, shouldBlock=True):
+def simple_timeit(f, *args, tries = 10, task = None, shouldBlock=True, local=False):
     '''Simple utility to time a function for multiple runs'''
     assert task is not None
 
     trace_name = f"t_{task}_" + ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(10))
     trace_dir = f"gs://maxtext-logs-dogfood-proj/jax-llm/profile/{trace_name}"
+
+    if local:
+        trace_dir = f"/tmp/jax-llm/profile/{trace_name}"
 
     outcomes_ms = []
     if shouldBlock:
