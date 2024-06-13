@@ -7,6 +7,8 @@ MAXRIX_SIZE = 16384
 BATCH_PER_CHIP = 4096
 LAYERS = 4
 
+jax.distributed.initialize()
+
 mesh = jax.sharding.Mesh(jax.devices(), ("myaxis"))
 
 activation_sharding = jax.sharding.NamedSharding(mesh, jax.sharding.PartitionSpec("myaxis", None))
