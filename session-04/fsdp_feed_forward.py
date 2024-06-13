@@ -27,7 +27,7 @@ def matmul_jit(A, Ws):
 
     return A
 
-average_time_ms = timing_util.simple_timeit(matmul_jit, ACTIVATION, Ws, task='fsdp_feed_f')
+average_time_ms = timing_util.simple_timeit(matmul_jit, ACTIVATION, Ws, task='fsdp_feed_f', local=True)
 
 achieved_bandwidth_GB_s = (ACTIVATION.size * 2 / 1e9) / (average_time_ms / 1e3)
 
